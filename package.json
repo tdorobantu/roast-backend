@@ -1,0 +1,30 @@
+{
+  "name": "roast-backend",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node index",
+    "dev": "nodemon index"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/tdorobantu/roast-backend.git"
+  },
+  "keywords": [],
+  "author": "Tudor Dorobantu",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/tdorobantu/roast-backend/issues"
+  },
+  "homepage": "https://github.com/tdorobantu/roast-backend#readme",
+  "dependencies": {
+    "express": "^4.17.3",
+    "redis-om": "^0.2.1"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.15"
+  }
+}
