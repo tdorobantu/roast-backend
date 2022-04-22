@@ -1,38 +1,44 @@
-import "dotenv/config"
+import "dotenv/config";
 import { Client, Entity, Schema, Repository } from "redis-om";
 
 const client = new Client();
 
 const connect = async () => {
-  console.log("THIS IS REDIS URL:", process.env.REDIS_URL);
   if (!client.isOpen()) {
     await client.open(process.env.REDIS_URL);
   }
 };
 
-class Coupon extends Entity {}
+class Campaign extends Entity {}
 
-let schema = new Schema(
-  Coupon,
+let schemaCampaign = new Schema(
+  Campaign,
   {
-    campaignId: { type: "string" },
-    couponId: { type: "string" },
-    senderId: { type: "string" },
-    receiverId: { type: "string" },
+    id: { type: "string" },
+    title: { type: "string" },
+    date: { type: "string" },
+    coupons: { type: "string" },
+    product: { type: "string" },
   },
   {
     dataStructure: "JSON",
   }
 );
 
-export const createCoupon = async (data) => {
+export const createCampaign = async (data) => {
   await connect();
 
-  const repository = client.fetchRepository(schema);
-
-  const coupon = repository.createEntity(data);
-
-  const id = await repository.save(coupon);
+  const repository = client.fetchRepository(schemaCampaign);
+  const id = await repository.createAndSave(data);
 
   return id;
+};
+
+export const remove = async (id) => {
+  await connect();
+
+  const repository = client.fetchRepository(schemaCampaign);
+
+  await repository.remove(id)
+
 };
