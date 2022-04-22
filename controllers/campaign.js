@@ -1,4 +1,4 @@
-import { createCampaign, removeCampaign } from "./../redis.js";
+import { createCampaign, removeCampaign } from "../redis/campaign.js";
 
 export const createCampaignAPI = async (req, res) => {
   const id = await createCampaign(req.body);
