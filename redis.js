@@ -1,5 +1,5 @@
 import "dotenv/config";
-import { Client, Entity, Schema, Repository } from "redis-om";
+import { Client, Entity, Schema } from "redis-om";
 
 const client = new Client();
 
@@ -34,11 +34,10 @@ export const createCampaign = async (data) => {
   return id;
 };
 
-export const remove = async (id) => {
+export const removeCampaign = async (id) => {
   await connect();
 
   const repository = client.fetchRepository(schemaCampaign);
-
-  await repository.remove(id)
-
+  console.log("delete id >>> ", id);
+  await repository.remove(id);
 };

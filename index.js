@@ -1,9 +1,8 @@
 import "dotenv/config";
 import express from "express";
-import { remove } from "./redis.js";
 import bodyParser from "body-parser";
 import cors from "cors";
-import { createCampaignAPI } from "./controllers/campaign.js";
+import router from "./routes.js";
 
 const app = express();
 
@@ -16,23 +15,9 @@ app.use(
 );
 
 app.use(bodyParser.json({ limit: "30mb", extended: true }));
+app.use(bodyParser.urlencoded({ limit: "30mb", extended: true }));
 
-app.get("/", (req, res) => {
-  res.send("Hello World!");
-});
-
-app.delete("/:id", async (req, res) => {
-  await remove(req.params.id);
-  res.send(req.params.id);
-});
-
-app.post("/create", createCampaignAPI);
-
-app.post("/test", (req, res) => {
-  console.log("this is req.body: ", req.body);
-  // const {campaignId, couponId } = req.body
-  // res.send(campaignId)
-});
+app.use("/api", router);
 
 const PORT = process.env.PORT || 4000;
 
