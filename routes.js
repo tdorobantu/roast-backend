@@ -1,5 +1,6 @@
 import express from "express";
-import * as controller from "./controllers/campaign.js"
+import * as campaign from "./controllers/campaign.js"
+import * as user from "./controllers/user.js"
 
 const router = express.Router()
 
@@ -9,7 +10,8 @@ router.get("/", (req, res) => {
 
 // Campaign Routes 🗺
 
-router.post("/campaign", controller.createCampaignAPI) 
-router.delete("/campaign/:id", controller.deleteCampaignAPI) 
+router.post("/campaign", campaign.createCampaignAPI) 
+router.delete("/campaign/:id", campaign.deleteCampaignAPI)
+router.post("/user/register", user.registerUserAPI)  
 
 export default router;
