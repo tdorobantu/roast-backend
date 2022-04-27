@@ -1,5 +1,5 @@
 import "dotenv/config";
-import { Client } from "redis-om";
+import { Client, Repository } from "redis-om";
 
 export const client = new Client();
  

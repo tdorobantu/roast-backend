@@ -20,10 +20,13 @@
   },
   "homepage": "https://github.com/tdorobantu/roast-backend#readme",
   "dependencies": {
+    "bcrypt": "^5.0.1",
     "body-parser": "^1.20.0",
     "cors": "^2.8.5",
     "express": "^4.17.3",
-    "redis-om": "^0.2.1"
+    "redis-om": "^0.2.1",
+    "string-sanitizer": "^2.0.2",
+    "validator": "^13.7.0"
   },
   "devDependencies": {
     "nodemon": "^2.0.15"

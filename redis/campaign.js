@@ -6,7 +6,7 @@ export const createCampaign = async (data) => {
 
   const repository = client.fetchRepository(schemaCampaign);
   const id = await repository.createAndSave(data);
-
+  
   return id;
 };
 
