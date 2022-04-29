@@ -6,10 +6,7 @@ export const getUser = async (userEmail) => {
 
     const repository = client.fetchRepository(schemaCampaign);
 
-    // ! createindex on app.on('listen', () => )
-    // await repository.createIndex();
-
-    let match = await repository.search().where('title').equals("redis refactor").returnAll()
+    let match = await repository.search().where('email').equals(userEmail).returnCount()
 
     return match
 }
