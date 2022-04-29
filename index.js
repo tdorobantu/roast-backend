@@ -3,6 +3,7 @@ import express from "express";
 import bodyParser from "body-parser";
 import cors from "cors";
 import router from "./routes.js";
+import { initiateRedis } from "./redis/redis.js";
 
 const app = express();
 
@@ -21,8 +22,13 @@ app.use("/api", router);
 
 const PORT = process.env.PORT || 4000;
 
-app.listen(PORT, () =>
+app.listen(PORT, () => {
   console.log(
     `Server started on ${PORT} and the redis url is ${process.env.REDIS_URL}`
-  )
-);
+  );
+  initiateRedis();
+});
+
+// app.on('listening', function() {
+//   initiateRedis();
+// })
