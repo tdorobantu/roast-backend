@@ -6,6 +6,7 @@ import {
   setUnixLastLogin,
 } from "../redis/user.js";
 import "dotenv/config";
+import { sendMail } from "../services/sendEmail.js";
 
 export const registerUserAPI = async (req, res) => {
   // declare regex patterns for string sanitization and unpack request body
@@ -129,3 +130,9 @@ export const loginUserAPI = async (req, res) => {
     return res.status(400).json({ message: "Invalid credentials!" });
   }
 };
+
+export const forgotPassAPI = async (req, res) => {
+    console.log(req)
+
+    await sendMail()
+}

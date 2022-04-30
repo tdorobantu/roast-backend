@@ -13,6 +13,7 @@ router.get("/", (req, res) => {
 router.post("/campaign", campaign.createCampaignAPI) 
 router.delete("/campaign/:id", campaign.deleteCampaignAPI)
 router.post("/user/register", user.registerUserAPI) 
-router.post("/user/login", user.loginUserAPI)   
+router.post("/user/login", user.loginUserAPI)
+router.post("/user/forgotPass", user.forgotPassAPI) 
 
 export default router;
