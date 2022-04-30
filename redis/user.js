@@ -25,15 +25,11 @@ export const getUser = async (userEmail) => {
 
   const repository = client.fetchRepository(schemaUser);
 
-  console.log("userEmail >>>", userEmail);
-
   let match = await repository
     .search()
     .where("email")
     .equals(userEmail)
     .returnFirst();
-
-  console.log("getUser match >>>", match);
 
   return match;
 };
@@ -53,10 +49,10 @@ export const setUnixLastLogin = async (entityId) => {
 
   const repository = client.fetchRepository(schemaUser);
   const user = await repository.fetch(entityId);
-  console.log("user before >", user);
+
   user.unixLastLogin = Date.now();
 
-  console.log("user after > ", user);
+
 
   await repository.save(user);
 

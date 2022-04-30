@@ -132,7 +132,50 @@ export const loginUserAPI = async (req, res) => {
 };
 
 export const forgotPassAPI = async (req, res) => {
-    console.log(req)
+  const blacklistEmail = /[` !#$%^&*()_+\-=[\]{};':"\\|,<>/?~]/g;
+  const { email } = req.body;
 
-    await sendMail()
-}
+  // sanitize req
+  const sanitizedEmail = email.replace(blacklistEmail, "");
+
+  let userMatch;
+
+  try {
+    userMatch = await getUser(sanitizedEmail);
+  } catch (error) {
+    console.log(error);
+    return res
+      .status(500)
+      .send({ message: "Redis db cannot get user. Contact Admin!" });
+  }
+
+  if (!!!userMatch) {
+    return res.status(400).json({
+      message:
+        "No user exists with the provided email adress. Please register.",
+    });
+  }
+
+  if (userMatch.entityData.blackListed) {
+    return res
+      .status(403)
+      .json({ message: "Your account has been blacklisted." });
+  }
+
+  const content =
+    '<p> Reset your password by clicking  👉 <a href="http://localhost:3000"> here </a> 👈 </p><p> Copy and paste the following link in your browser if clickable link is broken: http://localhost:3000</p>';
+  try {
+    await sendMail(email, "Roast ☕️ - Reset Password", content);
+  } catch {
+    return res
+      .status(500)
+      .json({ message: "Email service is offline. Please contact Admin" });
+  }
+
+  return res
+    .status(200)
+    .json({
+      message:
+        "An email was sent to your account with instructions for resetting your password.",
+    });
+};
