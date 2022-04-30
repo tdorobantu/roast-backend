@@ -36,3 +36,5 @@ export const sendMail = async () => {
 }
 
 sendMail().catch(console.error);
+
+// Hello 👋
