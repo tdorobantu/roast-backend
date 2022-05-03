@@ -11,6 +11,7 @@ const schemaUser = new Schema(
     unixJoin: { type: "string" },
     unixLastLogin: { type: "string" },
     blackListed: { type: "boolean"},
+    confirmed: {type: "boolean"}
   },
   {
     dataStructure: "JSON",

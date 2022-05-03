@@ -7,6 +7,7 @@ import {
 } from "../redis/user.js";
 import "dotenv/config";
 import { sendMail } from "../services/sendEmail.js";
+import jwt from "jsonwebtoken";
 
 export const registerUserAPI = async (req, res) => {
   // declare regex patterns for string sanitization and unpack request body
@@ -54,15 +55,36 @@ export const registerUserAPI = async (req, res) => {
   }
 
   try {
-    await registerUser({
+    const id = await registerUser({
       name: sanitizedName,
       email: sanitizedEmail,
       password: hashedPassword,
       unixJoin: Date.now(),
       unixLastLogin: 0,
       blackListed: false,
+      confirmed: false,
     });
-    return res.status(200).json({ message: "Succesfully Registered!" });
+
+    const auth = jwt.sign(
+      {
+        data: { id: id, email: entityData.email },
+      },
+      process.env.CONFIRM_KEY,
+      { expiresIn: "5m" }
+    );
+
+    const confirmationLink = `http://localhost:3000/confirmEmail?token=${auth}`;
+
+    sendMail(
+      entityData.email,
+      `Roast ☕️ - Confirm Account 👌", "Click on 👉  <a href="${confirmationLink}"> here </a> 👈 to confirm your email address.`
+    ).catch(console.error(error));
+
+    return res
+      .status(200)
+      .json({
+        message: "Registered! A confirmation link was sent to your account.",
+      });
   } catch (error) {
     console.log(error);
     return res
@@ -93,7 +115,7 @@ export const loginUserAPI = async (req, res) => {
   }
 
   // if there is no user with the provided email send error
-  if (!!!userMatch) {
+  if (!userMatch) {
     return res.status(400).json({
       message:
         "No user exists with the provided email adress. Please register.",
@@ -105,6 +127,14 @@ export const loginUserAPI = async (req, res) => {
     return res
       .status(403)
       .json({ message: "Your account has been blacklisted." });
+  }
+
+  if (!userMatch.entityData.confirmed) {
+    return res
+      .status(400)
+      .json({
+        message: "An confirmation email was sent. Please confirm your account.",
+      });
   }
 
   let validated;
@@ -172,10 +202,15 @@ export const forgotPassAPI = async (req, res) => {
       .json({ message: "Email service is offline. Please contact Admin" });
   }
 
-  return res
-    .status(200)
-    .json({
-      message:
-        "An email was sent to your account with instructions for resetting your password.",
-    });
+  return res.status(200).json({
+    message:
+      "An email was sent to your account with instructions for resetting your password.",
+  });
+};
+
+export const confirmEmailAPI = async (req, res) => {
+
+  const { token } = req.body
+
+  console.log("token", token);
 };

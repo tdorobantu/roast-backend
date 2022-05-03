@@ -39,9 +39,9 @@ export const registerUser = async (data) => {
 
   const repository = client.fetchRepository(schemaUser);
 
-  const id = await repository.createAndSave(data);
+  const { entityId } = await repository.createAndSave(data);
 
-  return;
+  return entityId;
 };
 
 export const setUnixLastLogin = async (entityId) => {
