@@ -67,24 +67,23 @@ export const registerUserAPI = async (req, res) => {
 
     const auth = jwt.sign(
       {
-        data: { id: id, email: entityData.email },
+        data: { id: id, email: sanitizedEmail },
       },
       process.env.CONFIRM_KEY,
-      { expiresIn: "5m" }
+      { expiresIn: "15m"}
     );
 
     const confirmationLink = `http://localhost:3000/confirmEmail?token=${auth}`;
 
-    sendMail(
-      entityData.email,
-      `Roast ☕️ - Confirm Account 👌", "Click on 👉  <a href="${confirmationLink}"> here </a> 👈 to confirm your email address.`
-    ).catch(console.error(error));
+    await sendMail(
+      sanitizedEmail,
+      "Roast ☕️ - Confirm Account 👌",
+      `Click on 👉  <a href="${confirmationLink}"> here </a> 👈 to confirm your email address.`
+    );
 
-    return res
-      .status(200)
-      .json({
-        message: "Registered! A confirmation link was sent to your account.",
-      });
+    return res.status(200).json({
+      message: "Registered! A confirmation link was sent to your account.",
+    });
   } catch (error) {
     console.log(error);
     return res
@@ -93,6 +92,10 @@ export const registerUserAPI = async (req, res) => {
   }
 
   // if successful, confirm
+
+
+
+
   // else, send error.
 };
 
@@ -130,11 +133,9 @@ export const loginUserAPI = async (req, res) => {
   }
 
   if (!userMatch.entityData.confirmed) {
-    return res
-      .status(400)
-      .json({
-        message: "An confirmation email was sent. Please confirm your account.",
-      });
+    return res.status(400).json({
+      message: "An confirmation email was sent. Please confirm your account.",
+    });
   }
 
   let validated;
@@ -209,8 +210,32 @@ export const forgotPassAPI = async (req, res) => {
 };
 
 export const confirmEmailAPI = async (req, res) => {
+  const { token } = req.body;
+  let decoded
+  try {
+  decoded = jwt.verify(token,  process.env.CONFIRM_KEY);
+  await User.update( { confirmed: true}, {where: {token}} );
+  } catch (error) {
+    if (error.name === "TokenExpiredError") {
+      return res.status(400).json({
+        errorType: "tokenExpired",
+        message: "Session expired! Please confirm email again!"
+      })
+    } else {
+      return res.status(400).json({
+        errorType: "tokenError", 
+        message: `${error.message}. Please call admin`
+      })
+    }
+  }
+  
+  
+  // Decrypt token; returns id, email: (token expired) => res.status(400) session expired. Please confirm your email again by followin this page!
+  // Verify user with id: (TRUE) => set confirmed to true! and send status 200 OK | (FALSE) => send status 400 response with error message
 
-  const { token } = req.body
 
-  console.log("token", token);
+  return res.status(200).json({
+    
+  });
+
 };

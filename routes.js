@@ -15,6 +15,6 @@ router.delete("/campaign/:id", campaign.deleteCampaignAPI)
 router.post("/user/register", user.registerUserAPI) 
 router.post("/user/login", user.loginUserAPI)
 router.post("/user/forgotpass", user.forgotPassAPI)
-router.post("user/confirmEmail", user.confirmEmailAPI) 
+router.post("/user/confirmEmail", user.confirmEmailAPI) 
 
 export default router;
