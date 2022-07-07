@@ -5,6 +5,7 @@ import {
   getUserCount,
   setUnixLastLogin,
   setConfirmedUserFlag,
+  setNewPassword,
 } from "../redis/user.js";
 import "dotenv/config";
 import { sendMail } from "../services/sendEmail.js";
@@ -76,11 +77,17 @@ export const registerUserAPI = async (req, res) => {
 
     const confirmationLink = `http://localhost:3000/confirmEmail?token=${auth}`;
 
-    await sendMail(
-      sanitizedEmail,
-      "Roast ☕️ - Confirm Account 👌",
-      `Click on 👉  <a href="${confirmationLink}"> here </a> 👈 to confirm your email address.`
-    );
+    try {
+      await sendMail(
+        sanitizedEmail,
+        "Roast ☕️ - Confirm Account 👌",
+        `Click on 👉  <a href="${confirmationLink}"> here </a> 👈 to confirm your email address.`
+      );
+    } catch {
+      return res
+        .status(500)
+        .json({ message: "Email service is offline. Please contact Admin" });
+    }
 
     return res.status(200).json({
       message: "Registered! A confirmation link was sent to your account.",
@@ -191,8 +198,18 @@ export const forgotPassAPI = async (req, res) => {
       .json({ message: "Your account has been blacklisted." });
   }
 
-  const content =
-    '<p> Reset your password by clicking  👉 <a href="http://localhost:3000"> here </a> 👈 </p><p> Copy and paste the following link in your browser if clickable link is broken: http://localhost:3000</p>';
+  const auth = jwt.sign(
+    {
+      data: { id: userMatch.entityId, email: sanitizedEmail },
+    },
+    process.env.CONFIRM_KEY,
+    { expiresIn: "15m" }
+  );
+
+  const confirmationLink = `http://localhost:3000/resetPassword?token=${auth}`;
+
+  const content = `<p> Reset your password by clicking  👉 <a href="${confirmationLink}"> here </a> 👈 </p><p> Copy and paste the following link in your browser if clickable link is broken: ${confirmationLink}</p>`;
+
   try {
     await sendMail(email, "Roast ☕️ - Reset Password", content);
   } catch {
@@ -209,7 +226,7 @@ export const forgotPassAPI = async (req, res) => {
 
 export const confirmEmailAPI = async (req, res) => {
   const { token } = req.body;
-  console.log("my token is :", token);
+
   let decoded;
   try {
     decoded = jwt.verify(token, process.env.CONFIRM_KEY);
@@ -304,5 +321,56 @@ export const resendConfirmationAPI = async (req, res) => {
   return res.status(200).json({
     message: "Registered! A confirmation link was sent to your account.",
   });
-  return res.status(200);
+};
+
+export const confirmPasswordAPI = async (req, res) => {
+  const { token, password } = req.body;
+
+  let decoded;
+  try {
+    decoded = jwt.verify(token, process.env.CONFIRM_KEY);
+  } catch (error) {
+    if (error.name === "TokenExpiredError") {
+      return res.status(400).json({
+        errorType: "tokenExpired",
+        message: "Session expired! Please follow reset password process again!",
+      });
+    } else {
+      return res.status(400).json({
+        errorType: "tokenError",
+        message: `${error.message}. Please call admin`,
+      });
+    }
+  }
+  const { id, email } = decoded.data;
+
+  console.log("my ID: ", id);
+
+  // encrypt password
+
+  let hashedPassword;
+
+  try {
+    hashedPassword = await bcrypt.hash(
+      password,
+      Number(process.env.SALT_VALUE)
+    );
+  } catch (error) {
+    return res
+      .status(500)
+      .json({ message: "Encryption error. Contact Admin!" });
+  }
+
+  try {
+    await setNewPassword(id, hashedPassword);
+  } catch {
+    return res.status(400).json({
+      errorType: "user does not exist",
+      message: "Could not retrieve email from database! Call Admin!",
+    });
+  }
+
+  return res.status(200).json({
+    message: "Password changed!. You may login with your new credentials.",
+  });
 };

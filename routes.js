@@ -17,5 +17,6 @@ router.post("/user/login", user.loginUserAPI);
 router.post("/user/forgotpass", user.forgotPassAPI);
 router.post("/user/confirmEmail", user.confirmEmailAPI);
 router.post("/user/resendConfirmation", user.resendConfirmationAPI);
+router.post("/user/confirmPassword", user.confirmPasswordAPI);
 
 export default router;

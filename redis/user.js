@@ -69,10 +69,27 @@ export const setConfirmedUserFlag = async (entityId) => {
   const repository = client.fetchRepository(schemaUser);
 
   const user = await repository.fetch(entityId);
-  console.log(user);
 
   user.confirmed = true;
 
   await repository.save(user);
+  return;
+};
+
+export const setNewPassword = async (entityId, password) => {
+  await connect(client);
+
+  const exists = await client.execute(["EXISTS", `User:${entityId}`]);
+
+  if (!exists) throw new Error("User mismatch");
+
+  const repository = client.fetchRepository(schemaUser);
+
+  const user = await repository.fetch(entityId);
+
+  user.password = password;
+
+  await repository.save(user);
+
   return;
 };
