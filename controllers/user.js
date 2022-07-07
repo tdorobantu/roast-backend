@@ -4,6 +4,7 @@ import {
   registerUser,
   getUserCount,
   setUnixLastLogin,
+  setConfirmedUserFlag,
 } from "../redis/user.js";
 import "dotenv/config";
 import { sendMail } from "../services/sendEmail.js";
@@ -70,7 +71,7 @@ export const registerUserAPI = async (req, res) => {
         data: { id: id, email: sanitizedEmail },
       },
       process.env.CONFIRM_KEY,
-      { expiresIn: "15m"}
+      { expiresIn: "15m" }
     );
 
     const confirmationLink = `http://localhost:3000/confirmEmail?token=${auth}`;
@@ -92,9 +93,6 @@ export const registerUserAPI = async (req, res) => {
   }
 
   // if successful, confirm
-
-
-
 
   // else, send error.
 };
@@ -211,31 +209,100 @@ export const forgotPassAPI = async (req, res) => {
 
 export const confirmEmailAPI = async (req, res) => {
   const { token } = req.body;
-  let decoded
+  console.log("my token is :", token);
+  let decoded;
   try {
-  decoded = jwt.verify(token,  process.env.CONFIRM_KEY);
-  await User.update( { confirmed: true}, {where: {token}} );
+    decoded = jwt.verify(token, process.env.CONFIRM_KEY);
   } catch (error) {
     if (error.name === "TokenExpiredError") {
       return res.status(400).json({
         errorType: "tokenExpired",
-        message: "Session expired! Please confirm email again!"
-      })
+        message: "Session expired! Please confirm email again!",
+      });
     } else {
       return res.status(400).json({
-        errorType: "tokenError", 
-        message: `${error.message}. Please call admin`
-      })
+        errorType: "tokenError",
+        message: `${error.message}. Please call admin`,
+      });
     }
   }
-  
-  
+  const { id, email } = decoded.data;
+
+  console.log("my ID: ", id);
+
+  try {
+    await setConfirmedUserFlag(id);
+  } catch {
+    return res.status(400).json({
+      errorType: "user does not exist",
+      message: "Could not retrieve email from database! Call Admin!",
+    });
+  }
+
   // Decrypt token; returns id, email: (token expired) => res.status(400) session expired. Please confirm your email again by followin this page!
   // Verify user with id: (TRUE) => set confirmed to true! and send status 200 OK | (FALSE) => send status 400 response with error message
 
+  return res
+    .status(200)
+    .json({ message: "Email Confirmed. You may login with your credentials." });
+};
+
+export const resendConfirmationAPI = async (req, res) => {
+  const blacklistEmail = /[` !#$%^&*()_+\-=[\]{};':"\\|,<>/?~]/g;
+  const { email } = req.body;
+
+  // sanitize req
+  const sanitizedEmail = email.replace(blacklistEmail, "");
+
+  let userMatch;
+
+  try {
+    // get user from db
+    userMatch = await getUser(sanitizedEmail);
+  } catch (error) {
+    return res.status(500).json({
+      errorType: "db failed",
+      message: "Redis db failed to retrieve user data. Contact Admin!",
+    });
+  }
+
+  // if there is no user with the provided email send error
+  if (!userMatch) {
+    return res.status(400).json({
+      errorType: "user does not exist",
+      message:
+        "No user exists with the provided email adress. Please register.",
+    });
+  }
+
+  // Check if user is blacklisted
+  if (userMatch.entityData.blackListed) {
+    return res.status(403).json({
+      errorType: "blacklisted user",
+      message: "Your account has been blacklisted.",
+    });
+  }
+
+  console.log("my user match: ", userMatch);
+
+  const auth = jwt.sign(
+    {
+      data: { id: userMatch.entityId, email: userMatch.entityData.email },
+    },
+    process.env.CONFIRM_KEY,
+    { expiresIn: "15m" }
+  );
+
+  const confirmationLink = `http://localhost:3000/confirmEmail?token=${auth}`;
+
+  await sendMail(
+    sanitizedEmail,
+    "Roast ☕️ - Confirm Account 👌",
+    `Click on 👉  <a href="${confirmationLink}"> here </a> 👈 to confirm your email address.`
+  );
 
   return res.status(200).json({
-    
+    message: "Registered! A confirmation link was sent to your account.",
   });
-
+  return res.status(200);
 };
