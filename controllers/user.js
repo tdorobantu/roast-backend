@@ -154,6 +154,31 @@ export const loginUserAPI = async (req, res) => {
   }
 
   if (validated) {
+    // create token and refresh token
+    const token = jwt.sign(
+      {
+        data: {
+          id: userMatch.entityId,
+          email: sanitizedEmail,
+          tokenType: "token",
+        },
+      },
+      process.env.CONFIRM_KEY,
+      { expiresIn: "15m" }
+    );
+
+    const refreshToken = jwt.sign(
+      {
+        data: {
+          id: userMatch.entityId,
+          email: sanitizedEmail,
+          tokenType: "refreshToken",
+        },
+      },
+      process.env.CONFIRM_KEY,
+      { expiresIn: "1d" }
+    );
+
     try {
       await setUnixLastLogin(userMatch.entityId);
     } catch (error) {
@@ -161,7 +186,9 @@ export const loginUserAPI = async (req, res) => {
         message: "Redis db error on setUnixLastLogin. Contact Admin!",
       });
     }
-    return res.status(200).json({ message: "You are logged in!" });
+    return res
+      .status(200)
+      .json({ token, refreshToken, message: "You are logged in!" });
   } else {
     return res.status(400).json({ message: "Invalid credentials!" });
   }
