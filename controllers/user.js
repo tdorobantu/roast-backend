@@ -358,7 +358,7 @@ export const confirmPasswordAPI = async (req, res) => {
     decoded = jwt.verify(token, process.env.CONFIRM_KEY);
   } catch (error) {
     if (error.name === "TokenExpiredError") {
-      return res.status(400).json({
+      return res.status(401).json({
         errorType: "tokenExpired",
         message: "Session expired! Please follow reset password process again!",
       });

@@ -9,7 +9,7 @@ const authorizeJWT = (req, res, next) => {
       const decoded = jwt.verify(token, process.env.CONFIRM_KEY);
     } catch (error) {
       if (error.name === "TokenExpiredError") {
-        return res.status(400).json({
+        return res.status(401).json({
           errorType: "tokenExpired",
           message: "Session expired! Please confirm email again!",
         });
