@@ -169,6 +169,7 @@ export const loginUserAPI = async (req, res) => {
       });
     }
     // create token and refresh token
+    // ! Be careful to set expiresIn back to 15m after testing
     const token = jwt.sign(
       {
         data: {

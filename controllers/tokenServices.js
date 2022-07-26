@@ -38,6 +38,7 @@ export const refreshToken = async (req, res) => {
   // if all OK, issue new token!
 
   // create token and refresh token
+  // ! Don't forget to set expiresIn back to 15m after testing
   const newToken = jwt.sign(
     {
       data: {
