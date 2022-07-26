@@ -34,6 +34,15 @@ export const getUser = async (userEmail) => {
   return match;
 };
 
+export const getUserById = async (entityId) => {
+  await connect(client);
+
+  const repository = client.fetchRepository(schemaUser);
+  const user = await repository.fetch(entityId);
+
+  return user;
+};
+
 export const registerUser = async (data) => {
   await connect(client);
 
@@ -88,6 +97,32 @@ export const setNewPassword = async (entityId, password) => {
   const user = await repository.fetch(entityId);
 
   user.password = password;
+
+  await repository.save(user);
+
+  return;
+};
+
+export const getTokenVersion = async (entityId) => {
+  await connect(client);
+
+  const repository = client.fetchRepository(schemaUser);
+  const user = await repository.fetch(entityId);
+
+  return user.tokenVersion;
+};
+
+export const setRefreshToken = async (entityId, refreshToken) => {
+  await connect(client);
+
+  const exists = await client.execute(["EXISTS", `User:${entityId}`]);
+
+  if (!exists) throw new Error("User mismatch");
+
+  const repository = client.fetchRepository(schemaUser);
+  const user = await repository.fetch(entityId);
+
+  user.refreshToken = refreshToken;
 
   await repository.save(user);
 

@@ -5,8 +5,9 @@ const authorizeJWT = (req, res, next) => {
 
   if (authHeader) {
     const token = authHeader.split(" ")[1];
+    let decoded;
     try {
-      const decoded = jwt.verify(token, process.env.CONFIRM_KEY);
+      decoded = jwt.verify(token, process.env.CONFIRM_KEY);
     } catch (error) {
       if (error.name === "TokenExpiredError") {
         return res.status(401).json({
@@ -20,6 +21,7 @@ const authorizeJWT = (req, res, next) => {
         });
       }
     }
+    req.authMiddleware = { decoded, token };
     next();
   } else {
     return res.status(400).json({ message: "No Auth header!" });

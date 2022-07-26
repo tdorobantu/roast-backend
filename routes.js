@@ -3,7 +3,7 @@ import * as campaign from "./controllers/campaign.js";
 import * as user from "./controllers/user.js";
 import * as init from "./controllers/init.js";
 import authorizeJWT from "./services/authorizeJWT.js";
-import * as tokenServices from "./services/tokenServices.js";
+import * as tokenServices from "./controllers/tokenServices.js";
 
 const router = express.Router();
 
@@ -21,6 +21,10 @@ router.post("/user/confirmEmail", user.confirmEmailAPI);
 router.post("/user/resendConfirmation", user.resendConfirmationAPI);
 router.post("/user/confirmPassword", user.confirmPasswordAPI);
 router.get("/init/app", authorizeJWT, init.appAPI);
-router.post("/tokenServices/refreshToken", tokenServices.refreshToken);
+router.get(
+  "/tokenServices/refreshToken",
+  authorizeJWT,
+  tokenServices.refreshToken
+);
 
 export default router;

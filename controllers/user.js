@@ -6,6 +6,8 @@ import {
   setUnixLastLogin,
   setConfirmedUserFlag,
   setNewPassword,
+  getTokenVersion,
+  setRefreshToken,
 } from "../redis/user.js";
 import "dotenv/config";
 import { sendMail } from "../services/sendEmail.js";
@@ -65,6 +67,9 @@ export const registerUserAPI = async (req, res) => {
       unixLastLogin: 0,
       blackListed: false,
       confirmed: false,
+      tokenVersion: 1,
+      refreshToken: "",
+      hashedFingerprint: "",
     });
 
     const auth = jwt.sign(
@@ -154,6 +159,15 @@ export const loginUserAPI = async (req, res) => {
   }
 
   if (validated) {
+    // Retrieve token version
+    let tokenVersion;
+    try {
+      tokenVersion = await getTokenVersion(userMatch.entityId);
+    } catch (error) {
+      return res.status(500).json({
+        message: "Error retrieving the token version of the provided user.",
+      });
+    }
     // create token and refresh token
     const token = jwt.sign(
       {
@@ -172,6 +186,8 @@ export const loginUserAPI = async (req, res) => {
         data: {
           id: userMatch.entityId,
           email: sanitizedEmail,
+          tokenVersion: tokenVersion,
+          hashedFingerprint: "",
           tokenType: "refreshToken",
         },
       },
@@ -181,9 +197,12 @@ export const loginUserAPI = async (req, res) => {
 
     try {
       await setUnixLastLogin(userMatch.entityId);
+      await setRefreshToken(userMatch.entityId, refreshToken);
     } catch (error) {
+      console.log(error);
       return res.status(500).json({
-        message: "Redis db error on setUnixLastLogin. Contact Admin!",
+        message:
+          "Redis db error on setUnixLastLogin or refreshToken. Contact Admin!",
       });
     }
     return res

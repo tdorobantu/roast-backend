@@ -10,8 +10,11 @@ const schemaUser = new Schema(
     password: { type: "string" },
     unixJoin: { type: "string" },
     unixLastLogin: { type: "string" },
-    blackListed: { type: "boolean"},
-    confirmed: {type: "boolean"}
+    blackListed: { type: "boolean" },
+    confirmed: { type: "boolean" },
+    tokenVersion: { type: "number" },
+    refreshToken: { type: "string" },
+    hashedFingerprint: { type: "string" },
   },
   {
     dataStructure: "JSON",
