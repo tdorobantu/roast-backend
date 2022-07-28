@@ -1,4 +1,5 @@
 import jwt from "jsonwebtoken";
+import crypto from "crypto";
 
 const authorizeJWT = (req, res, next) => {
   const authHeader = req.headers.authorization;
@@ -12,7 +13,7 @@ const authorizeJWT = (req, res, next) => {
       if (error.name === "TokenExpiredError") {
         return res.status(401).json({
           errorType: "tokenExpired",
-          message: "Session expired! Please confirm email again!",
+          message: "Session expired! Issuing new token.",
         });
       } else {
         return res.status(400).json({
@@ -21,7 +22,28 @@ const authorizeJWT = (req, res, next) => {
         });
       }
     }
-    req.authMiddleware = { decoded, token };
+
+    if (req.cookies["__Secure-Fgp"] === undefined) {
+      return res.status(400).json({
+        errorType: "noCookie",
+        message: "There is no secure cookie for auth",
+      });
+    }
+
+    const hashedCookieFgp = crypto
+      .createHash("sha256")
+      .update(req.cookies["__Secure-Fgp"])
+      .digest("hex");
+
+    // Verify fingerprint is OK!
+    console.log(decoded.data.hashedFingerprint);
+    if (decoded.data.hashedFingerprint !== hashedCookieFgp) {
+      return res.status(400).json({
+        errorType: "fgpError",
+        message: "Invalid fingerprint!",
+      });
+    }
+
     next();
   } else {
     return res.status(400).json({ message: "No Auth header!" });

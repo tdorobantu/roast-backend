@@ -185,11 +185,10 @@ export const loginUserAPI = async (req, res) => {
           email: sanitizedEmail,
           tokenType: "token",
           hashedFingerprint: hashedFingerprint,
-          tokenVersion: tokenVersion,
         },
       },
       process.env.CONFIRM_KEY,
-      { expiresIn: "3s" }
+      { expiresIn: "15m" }
     );
 
     // create refreshToken
@@ -219,9 +218,9 @@ export const loginUserAPI = async (req, res) => {
       });
     }
     // Add fingerprint as hardened cookie
-    // ! Test what happens when cookie expires
+    // ! But all times in environment variables
     res.cookie("__Secure-Fgp", fingerprint, {
-      maxAge: 1000 * 60 * 20,
+      maxAge: 1000 * 60 * 60 * 24 * 1,
       httpOnly: true,
       secure: true,
       sameSite: "strict",

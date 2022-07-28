@@ -21,10 +21,6 @@ router.post("/user/confirmEmail", user.confirmEmailAPI);
 router.post("/user/resendConfirmation", user.resendConfirmationAPI);
 router.post("/user/confirmPassword", user.confirmPasswordAPI);
 router.get("/init/app", authorizeJWT, init.appAPI);
-router.get(
-  "/tokenServices/refreshToken",
-  authorizeJWT,
-  tokenServices.refreshToken
-);
+router.post("/tokenServices/refreshToken", tokenServices.refreshToken);
 
 export default router;
