@@ -4,12 +4,13 @@ import bodyParser from "body-parser";
 import cors from "cors";
 import router from "./routes.js";
 import { initiateRedis } from "./redis/redis.js";
+import https from "https";
 
 const app = express();
 
 app.use(
   cors({
-    origin: "http://localhost:3000",
+    origin: ["http://localhost:3000", "https://localhost:3000"],
     methods: "GET,HEAD,PUT,PATCH,POST,DELETE",
     optionsSuccessStatus: 200,
   })
