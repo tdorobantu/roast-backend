@@ -8,7 +8,7 @@ import * as tokenServices from "./controllers/tokenServices.js";
 const router = express.Router();
 
 router.get("/", (req, res) => {
-  res.send("Hello World!");
+  res.send({ message: "Hello World!" });
 });
 
 // All Routes 🗺

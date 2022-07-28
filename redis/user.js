@@ -112,6 +112,15 @@ export const getTokenVersion = async (entityId) => {
   return user.tokenVersion;
 };
 
+export const getRefreshToken = async (entityId) => {
+  await connect(client);
+
+  const repository = client.fetchRepository(schemaUser);
+  const user = await repository.fetch(entityId);
+
+  return user.refreshToken;
+};
+
 export const setRefreshToken = async (entityId, refreshToken) => {
   await connect(client);
 

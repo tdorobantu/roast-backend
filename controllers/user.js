@@ -12,6 +12,7 @@ import {
 import "dotenv/config";
 import { sendMail } from "../services/sendEmail.js";
 import jwt from "jsonwebtoken";
+import crypto from "crypto";
 
 export const registerUserAPI = async (req, res) => {
   // declare regex patterns for string sanitization and unpack request body
@@ -168,7 +169,14 @@ export const loginUserAPI = async (req, res) => {
         message: "Error retrieving the token version of the provided user.",
       });
     }
-    // create token and refresh token
+
+    // create fingerprint
+    const fingerprint = crypto.randomBytes(64).toString("hex");
+    const hashedFingerprint = crypto
+      .createHash("sha256")
+      .update(fingerprint)
+      .digest("hex");
+    // create token
     // ! Be careful to set expiresIn back to 15m after testing
     const token = jwt.sign(
       {
@@ -176,11 +184,15 @@ export const loginUserAPI = async (req, res) => {
           id: userMatch.entityId,
           email: sanitizedEmail,
           tokenType: "token",
+          hashedFingerprint: hashedFingerprint,
+          tokenVersion: tokenVersion,
         },
       },
       process.env.CONFIRM_KEY,
-      { expiresIn: "15m" }
+      { expiresIn: "3s" }
     );
+
+    // create refreshToken
 
     const refreshToken = jwt.sign(
       {
@@ -188,7 +200,7 @@ export const loginUserAPI = async (req, res) => {
           id: userMatch.entityId,
           email: sanitizedEmail,
           tokenVersion: tokenVersion,
-          hashedFingerprint: "",
+          hashedFingerprint: hashedFingerprint,
           tokenType: "refreshToken",
         },
       },
@@ -206,6 +218,14 @@ export const loginUserAPI = async (req, res) => {
           "Redis db error on setUnixLastLogin or refreshToken. Contact Admin!",
       });
     }
+    // Add fingerprint as hardened cookie
+    // ! Test what happens when cookie expires
+    res.cookie("__Secure-Fgp", fingerprint, {
+      maxAge: 1000 * 60 * 20,
+      httpOnly: true,
+      secure: true,
+      sameSite: "strict",
+    });
     return res
       .status(200)
       .json({ token, refreshToken, message: "You are logged in!" });
